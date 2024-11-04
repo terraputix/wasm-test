@@ -1,6 +1,6 @@
-# OmFileFormatC WebAssembly Project
+# OmFileFormatC WASM Test
 
-This project demonstrates how to compile C code to WebAssembly using Emscripten and run benchmarks for encoding speed.
+POC how to compile OmFileFormatC to wasm and related benchmarks and tests.
 
 ## Prerequisites
 
@@ -26,6 +26,17 @@ node test_round_trip_p4n.js
 
 # benchmark p4
 node run_benchmark.js
+# prints the following on Intel(R) Core(TM) i7-10510U CPU @ 1.80GHz:
+# Encoding speed: 487.80 MB/s
+# Encoding speed: 500.00 MB/s
+# Encoding speed: 512.82 MB/s
+# Encoding speed: 540.54 MB/s
+# Encoding speed: 444.44 MB/s
+# Encoding speed: 465.12 MB/s
+# Encoding speed: 500.00 MB/s
+# Encoding speed: 512.82 MB/s
+# Encoding speed: 540.54 MB/s
+# Encoding speed: 555.56 MB/s
 ```
 
 ## License
