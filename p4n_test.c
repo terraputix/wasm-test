@@ -3,39 +3,92 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <emscripten.h>
 #include "vp4.h"
 
-#define DATA_SIZE (1024 * 1024 * 10) // 10 MB of data
+typedef struct Compressor {
+    uint16_t* data;
+    uint8_t* compressed;
+    size_t buffer_size;    // Maximum buffer size
+    size_t data_size;      // Actual data size
+    size_t compressed_size;
+    double last_compression_speed;
+} Compressor;
 
-void test_round_trip_p4n(uint16_t *nums, size_t n, uint8_t *compressed, uint16_t *recovered)
-{
-    p4nzenc128v16(nums, n, compressed);
-    p4nzdec128v16(compressed, n, recovered);
+EMSCRIPTEN_KEEPALIVE
+Compressor* P4NCompressor_create(size_t initial_size) {
+    Compressor* comp = (Compressor*)malloc(sizeof(Compressor));
+    if (comp) {
+        comp->data = (uint16_t*)malloc(initial_size * sizeof(uint16_t));
+        comp->compressed = (uint8_t*)malloc(initial_size * sizeof(uint8_t));
+        comp->buffer_size = initial_size;
+        comp->data_size = 0;
+        comp->compressed_size = 0;
+        comp->last_compression_speed = 0.0;
+    }
+    return comp;
 }
 
-void benchmark_p4nzenc128v16()
-{
-    uint16_t *data = (uint16_t *)malloc(DATA_SIZE * sizeof(uint16_t));
-    uint8_t *compressed = (uint8_t *)malloc(DATA_SIZE * sizeof(uint8_t)); // Allocate enough space for compressed data
+EMSCRIPTEN_KEEPALIVE
+void P4NCompressor_destroy(Compressor* comp) {
+    if (comp) {
+        free(comp->data);
+        free(comp->compressed);
+        free(comp);
+    }
+}
 
-    // Initialize data with some values
-    for (size_t i = 0; i < DATA_SIZE; i++)
-    {
-        data[i] = (uint16_t)(i % 65536); // Example data
+EMSCRIPTEN_KEEPALIVE
+bool P4NCompressor_set_data(Compressor* comp, const uint16_t* new_data, size_t n) {
+    if (!comp) return false;
+    if (n > comp->buffer_size) {
+        printf("Buffer too small\n");
+        return false;
     }
 
+    printf("Input data size: %zu\n", n);
+    printf("First few input values: ");
+    for (size_t i = 0; i < (n > 5 ? 5 : n); i++) {
+        printf("%u ", new_data[i]);
+    }
+    printf("\n");
+
+    for (size_t i = 0; i < n; i++) {
+        comp->data[i] = new_data[i];
+    }
+
+    comp->data_size = n;
+    return true;
+}
+
+EMSCRIPTEN_KEEPALIVE
+size_t P4NCompressor_compress(Compressor* comp) {
+    if (!comp) return 0;
+
+    printf("Data size: %zu\n", comp->data_size);
+    printf("First few data values: ");
+    for (size_t i = 0; i < (comp->data_size > 5 ? 5 : comp->data_size); i++) {
+        printf("%u ", comp->data[i]);
+    }
+    printf("\n");
+
     clock_t start = clock();
-
-    // Perform the encoding
-    p4nzenc128v16(data, DATA_SIZE, compressed);
-
+    comp->compressed_size = p4nzenc128v16(comp->data, comp->data_size, comp->compressed);
     clock_t end = clock();
-    double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC; // Time in seconds
 
-    double mb_per_second = (DATA_SIZE * sizeof(uint16_t)) / (1024.0 * 1024.0) / time_taken;
+    comp->last_compression_speed = ((double)(end - start)) / CLOCKS_PER_SEC;
+    return comp->compressed_size;
+}
 
-    printf("Encoding speed: %.2f MB/s\n", mb_per_second);
+EMSCRIPTEN_KEEPALIVE
+uint8_t* P4NCompressor_get_compressed_data(Compressor* comp) {
+    return comp ? comp->compressed : NULL;
+}
 
-    free(data);
-    free(compressed);
+EMSCRIPTEN_KEEPALIVE
+bool P4NCompressor_decompress(Compressor* comp, uint16_t* output) {
+    if (!comp || !output || comp->compressed_size == 0) return false;
+
+    p4nzdec128v16(comp->compressed, comp->data_size, output);
+    return true;
 }
