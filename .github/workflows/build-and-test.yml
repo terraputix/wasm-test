@@ -22,6 +22,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: List directory structure
+        run: |
+          ls -R
+
       - name: Build WASM
         run: |
           npm run build
