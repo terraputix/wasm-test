@@ -66,7 +66,7 @@ describe("OmFileReader", () => {
     await reader.createReader(getBytesCallback, testFileData.byteLength);
 
     // Adjust these values according to your test file's dimensions
-    const outputSize = 1000; // Adjust based on your test data
+    const outputSize = 5000; // Adjust based on your test data
     const output = new Uint8Array(outputSize);
     const dimReadStart = new BigInt64Array([0n, 0n, 0n]);
     const dimReadEnd = new BigInt64Array([10n, 10n, 10n]);
@@ -84,6 +84,28 @@ describe("OmFileReader", () => {
     expect(result).toBe(0); // OM_FILE_ERROR_OK
     // Add more specific expectations about the decoded data
     expect(output).not.toEqual(new Uint8Array(outputSize)); // Should not be all zeros
+
+    // Interpret output as float array
+    const floatArray = new Float32Array(
+      output.buffer,
+      output.byteOffset,
+      output.length / 4,
+    );
+
+    expect(Array.from(floatArray.slice(0, 10))).toEqual(
+      expect.arrayContaining([
+        expect.closeTo(-24.25, 0.001),
+        expect.closeTo(-24.75, 0.001),
+        expect.closeTo(-23.85, 0.001),
+        expect.closeTo(-23.95, 0.001),
+        expect.closeTo(-25.45, 0.001),
+        expect.closeTo(-25.9, 0.001),
+        expect.closeTo(-26.4, 0.001),
+        expect.closeTo(-26.45, 0.001),
+        expect.closeTo(-26.2, 0.001),
+        expect.closeTo(-26.2, 0.001),
+      ]),
+    );
   });
 
   // it("should fail with invalid dimensions", async () => {
