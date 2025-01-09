@@ -12,6 +12,7 @@ POC how to compile OmFileFormatC to wasm and related benchmarks and tests.
 We compile the project using the Emscripten Docker container
 
 ```sh
+git submodule add https://github.com/open-meteo/om-file-format
 docker pull emscripten/emsdk
 docker run --rm -v $(pwd):/src emscripten/emsdk make -C /src
 ```

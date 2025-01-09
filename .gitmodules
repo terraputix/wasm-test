@@ -1,0 +1,3 @@
+[submodule "om-file-format"]
+	path = om-file-format
+	url = https://github.com/open-meteo/om-file-format

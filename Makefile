@@ -1,6 +1,6 @@
 # Define the compiler and flags
 EMCC = emcc
-CFLAGS = -I/src/OmFileFormatC/include \
+CFLAGS = -I/src/om-file-format/c/include \
 		 -msimd128 \
 		 -mssse3 \
 		 -O3 \
@@ -11,28 +11,28 @@ CFLAGS = -I/src/OmFileFormatC/include \
 
 # Define the source files
 SRC_FILES = /src/p4n_test.c \
-			/src/OmFileFormatC/src/om_decoder.c \
-			/src/OmFileFormatC/src/om_encoder.c \
-			/src/OmFileFormatC/src/vp4c.c \
-			/src/OmFileFormatC/src/vp4d.c \
-			/src/OmFileFormatC/src/vp4d_sse.c \
-			/src/OmFileFormatC/src/vp4d_def.c \
-			/src/OmFileFormatC/src/vp4d_avx2.c \
-			/src/OmFileFormatC/src/vp4c_sse.c \
-			/src/OmFileFormatC/src/vp4c_def.c \
-			/src/OmFileFormatC/src/vp4c_avx2.c \
-			/src/OmFileFormatC/src/vint.c \
-			/src/OmFileFormatC/src/fp.c \
-			/src/OmFileFormatC/src/delta2d.c \
-			/src/OmFileFormatC/src/bitutil.c \
-			/src/OmFileFormatC/src/bitunpack.c \
-			/src/OmFileFormatC/src/bitunpack_sse.c \
-			/src/OmFileFormatC/src/bitunpack_def.c \
-			/src/OmFileFormatC/src/bitunpack_avx2.c \
-			/src/OmFileFormatC/src/bitpack.c \
-			/src/OmFileFormatC/src/bitpack_sse.c \
-			/src/OmFileFormatC/src/bitpack_def.c \
-			/src/OmFileFormatC/src/bitpack_avx2.c
+			/src/om-file-format/c/src/om_decoder.c \
+			/src/om-file-format/c/src/om_encoder.c \
+			/src/om-file-format/c/src/vp4c.c \
+			/src/om-file-format/c/src/vp4d.c \
+			/src/om-file-format/c/src/vp4d_sse.c \
+			/src/om-file-format/c/src/vp4d_def.c \
+			/src/om-file-format/c/src/vp4d_avx2.c \
+			/src/om-file-format/c/src/vp4c_sse.c \
+			/src/om-file-format/c/src/vp4c_def.c \
+			/src/om-file-format/c/src/vp4c_avx2.c \
+			/src/om-file-format/c/src/vint.c \
+			/src/om-file-format/c/src/fp.c \
+			/src/om-file-format/c/src/delta2d.c \
+			/src/om-file-format/c/src/bitutil.c \
+			/src/om-file-format/c/src/bitunpack.c \
+			/src/om-file-format/c/src/bitunpack_sse.c \
+			/src/om-file-format/c/src/bitunpack_def.c \
+			/src/om-file-format/c/src/bitunpack_avx2.c \
+			/src/om-file-format/c/src/bitpack.c \
+			/src/om-file-format/c/src/bitpack_sse.c \
+			/src/om-file-format/c/src/bitpack_def.c \
+			/src/om-file-format/c/src/bitpack_avx2.c
 
 # Define the output files
 OUT_JS = /src/p4n_test.js
