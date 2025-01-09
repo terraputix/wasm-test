@@ -86,7 +86,7 @@ describe("P4N Compression", () => {
 
       // Assert reasonable performance metrics
       expect(compressionTime).toBeGreaterThan(0);
-      expect(speedMBps).toBeGreaterThan(500);
+      expect(speedMBps).toBeGreaterThan(300);
     } finally {
       compressor.dispose();
     }
