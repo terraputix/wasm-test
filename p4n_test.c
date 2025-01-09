@@ -46,13 +46,6 @@ bool P4NCompressor_set_data(Compressor* comp, const uint16_t* new_data, size_t n
         return false;
     }
 
-    printf("Input data size: %zu\n", n);
-    printf("First few input values: ");
-    for (size_t i = 0; i < (n > 5 ? 5 : n); i++) {
-        printf("%u ", new_data[i]);
-    }
-    printf("\n");
-
     for (size_t i = 0; i < n; i++) {
         comp->data[i] = new_data[i];
     }
@@ -64,13 +57,6 @@ bool P4NCompressor_set_data(Compressor* comp, const uint16_t* new_data, size_t n
 EMSCRIPTEN_KEEPALIVE
 size_t P4NCompressor_compress(Compressor* comp) {
     if (!comp) return 0;
-
-    printf("Data size: %zu\n", comp->data_size);
-    printf("First few data values: ");
-    for (size_t i = 0; i < (comp->data_size > 5 ? 5 : comp->data_size); i++) {
-        printf("%u ", comp->data[i]);
-    }
-    printf("\n");
 
     clock_t start = clock();
     comp->compressed_size = p4nzenc128v16(comp->data, comp->data_size, comp->compressed);

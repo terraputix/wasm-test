@@ -1,21 +1,37 @@
 # Define the compiler and flags
 EMCC = emcc
 
-EXPORTED_FUNCS = [ '_P4NCompressor_compress', '_P4NCompressor_decompress', '_P4NCompressor_create', '_P4NCompressor_get_compressed_data', '_malloc', '_free']
-RUNTIME_METHODS = ['ccall', 'cwrap']
+EXPORTED_FUNCS = '[\
+    "_P4NCompressor_compress",\
+    "_P4NCompressor_decompress",\
+    "_P4NCompressor_create",\
+    "_P4NCompressor_get_compressed_data",\
+    "_create_reader_from_js",\
+    "_decode_with_reader",\
+    "_destroy_reader",\
+    "_malloc",\
+    "_free"\
+]'
+
+RUNTIME_METHODS = '[\
+    "ccall",\
+    "cwrap"\
+]'
 
 CFLAGS = -I/src/om-file-format/c/include \
-			-msimd128 \
-			-mssse3 \
-			-O3 \
-			-s EXPORTED_FUNCTIONS="$(EXPORTED_FUNCS)" \
-			-s EXPORTED_RUNTIME_METHODS='$(RUNTIME_METHODS)' \
-			-s INITIAL_MEMORY=33554432 \
-			-s MAXIMUM_MEMORY=67108864
+         -msimd128 \
+         -mssse3 \
+         -O3 \
+         -s EXPORTED_FUNCTIONS=$(EXPORTED_FUNCS) \
+         -s EXPORTED_RUNTIME_METHODS=$(RUNTIME_METHODS) \
+         -s INITIAL_MEMORY=33554432 \
+         -s MAXIMUM_MEMORY=67108864 \
+         -s WASM_BIGINT
 
 
 # Define the source files
 SRC_FILES = /src/p4n_test.c \
+			/src/om_file_reader.c \
 			$(wildcard /src/om-file-format/c/src/*.c)
 
 DIST_DIR = dist
