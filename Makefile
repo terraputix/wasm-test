@@ -29,8 +29,6 @@ CFLAGS = -I/src/om-file-format/c/include \
          -s INITIAL_MEMORY=67108864 \
          -s MAXIMUM_MEMORY=67108864 \
          -s WASM_BIGINT \
-         --profiling-funcs \
-         -s ASSERTIONS=2 \
          -Wbad-function-cast \
          -fwasm-exceptions
 

@@ -108,26 +108,26 @@ describe("OmFileReader", () => {
     );
   });
 
-  // it("should fail with invalid dimensions", async () => {
-  //   reader = new OmFileReader();
-  //   await reader.createReader(getBytesCallback, testFileData.byteLength);
+  it("should fail with invalid dimensions", async () => {
+    reader = new OmFileReader();
+    await reader.createReader(getBytesCallback, testFileData.byteLength);
 
-  //   const output = new Uint8Array(1000);
-  //   const dimReadStart = new BigInt64Array([0n]); // Invalid dimension count
-  //   const dimReadEnd = new BigInt64Array([10n]);
-  //   const intoCubeOffset = new BigInt64Array([0n]);
-  //   const intoCubeDimension = new BigInt64Array([10n]);
+    const output = new Uint8Array(1000);
+    const dimReadStart = new BigInt64Array([0n]); // Invalid dimension count
+    const dimReadEnd = new BigInt64Array([10n]);
+    const intoCubeOffset = new BigInt64Array([0n]);
+    const intoCubeDimension = new BigInt64Array([10n]);
 
-  //   const result = reader.decode(
-  //     output,
-  //     dimReadStart,
-  //     dimReadEnd,
-  //     intoCubeOffset,
-  //     intoCubeDimension,
-  //   );
+    const result = reader.decode(
+      output,
+      dimReadStart,
+      dimReadEnd,
+      intoCubeOffset,
+      intoCubeDimension,
+    );
 
-  //   expect(result).not.toBe(0); // Should return an error
-  // });
+    expect(result).not.toBe(0); // Should return an error
+  });
 
   // it("should handle out-of-bounds reads", async () => {
   //   reader = new OmFileReader();
@@ -154,9 +154,6 @@ describe("OmFileReader", () => {
   // // Test memory management
   // it("should properly clean up resources", async () => {
   //   reader = new OmFileReader();
-  //   const getBytesCallback = (offset: number, count: number) => {
-  //     return new Uint8Array(testFileData.slice(offset, offset + count));
-  //   };
 
   //   await reader.createReader(getBytesCallback, testFileData.byteLength);
   //   reader.destroy();
