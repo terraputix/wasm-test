@@ -21,6 +21,7 @@ OmFileError convert_om_error(OmError_t error) {
         case ERROR_OK:
             return OM_FILE_ERROR_OK;
         default:
+            printf("FOUND ERROR: %d\n", error);
             return OM_FILE_ERROR_DECODER;
     }
 }
@@ -418,8 +419,6 @@ OmFileError om_file_reader_decode(const OmFileReader* reader, OmDecoder_t* decod
 
     printf("  scale_factor: %f\n", decoder->scale_factor);
     printf("  add_offset: %f\n", decoder->add_offset);
-    printf("  bytes_per_element: %d\n", decoder->bytes_per_element);
-    printf("  bytes_per_element_compressed: %d\n", decoder->bytes_per_element_compressed);
 
 
     printf("Location of om_decoder_next_index_read: %p\n", (void*)om_decoder_next_index_read);
@@ -481,7 +480,6 @@ OmFileError om_file_reader_decode(const OmFileReader* reader, OmDecoder_t* decod
             printf("Trying to decode chunks\n");
             printf("Calling om_decoder_decode_chunks with:\n");
             printf("  decoder: %p\n", (void*)decoder);
-            printf("  chunkIndex: %llu\n", data_read.chunkIndex);
             printf("  data: %p\n", (void*)data);
             printf("  count: %llu\n", data_read.count);
             printf("  output: %p\n", output);
