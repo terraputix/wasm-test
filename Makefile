@@ -34,9 +34,9 @@ CFLAGS = -I/src/om-file-format/c/include \
          -fwasm-exceptions
 
 # Define the source files
-SRC_FILES = /src/p4n_test.c \
-			/src/om_file_reader.c \
-			/src/test_turbopfor_wasm.c \
+SRC_FILES = /src/C/p4n_test.c \
+			/src/C/om_file_reader.c \
+			/src/C/test_turbopfor_wasm.c \
 			$(wildcard /src/om-file-format/c/src/*.c)
 
 DIST_DIR = dist
@@ -46,11 +46,11 @@ OUT_JS = $(WASM_DIR)/om_reader_wasm.js
 # Default target
 all: $(OUT_JS)
 
-$(OUT_JS): p4n_test.c
+$(OUT_JS): $(SRC_FILES)
 	mkdir -p $(WASM_DIR)
 	$(EMCC) $(SRC_FILES) $(CFLAGS) -o $(OUT_JS)
 
 
 # Clean target
 clean:
-	rm -f $(OUT_JS) /src/p4n_test.wasm
+	rm -rf $(WASM_DIR)
