@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterEach, it, expect } from "vitest";
+import { describe, beforeAll, afterEach, it, expect, beforeEach } from "vitest";
 import { initWasm } from "../lib/wasm";
 import { OmFileReader } from "../lib/OmFileReader";
 import fs from "fs/promises";
@@ -6,6 +6,8 @@ import path from "path";
 
 describe("OmFileReader", () => {
   let testFileData: ArrayBuffer;
+  // Create a new reader for each test
+  let reader: OmFileReader;
 
   const getBytesCallback = (offset: bigint, count: bigint): Uint8Array => {
     // Convert BigInt to Number for slice operation
@@ -33,8 +35,9 @@ describe("OmFileReader", () => {
     testFileData = fileBuffer.buffer;
   });
 
-  // Create a new reader for each test
-  let reader: OmFileReader;
+  beforeEach(() => {
+    reader = new OmFileReader();
+  });
 
   afterEach(() => {
     if (reader) {
@@ -43,14 +46,12 @@ describe("OmFileReader", () => {
   });
 
   it("should successfully create a reader", async () => {
-    reader = new OmFileReader();
     await expect(
       reader.createReader(getBytesCallback, testFileData.byteLength),
     ).resolves.not.toThrow();
   });
 
   it("should fail to create reader with invalid callback", async () => {
-    reader = new OmFileReader();
     const invalidCallback = (offset: bigint, count: bigint) => {
       throw new Error("Invalid callback");
     };
@@ -61,8 +62,6 @@ describe("OmFileReader", () => {
   });
 
   it("should successfully decode data", async () => {
-    reader = new OmFileReader();
-
     await reader.createReader(getBytesCallback, testFileData.byteLength);
 
     // Adjust these values according to your test file's dimensions
@@ -109,7 +108,6 @@ describe("OmFileReader", () => {
   });
 
   it("should fail with invalid dimensions", async () => {
-    reader = new OmFileReader();
     await reader.createReader(getBytesCallback, testFileData.byteLength);
 
     const output = new Uint8Array(1000);
@@ -153,8 +151,6 @@ describe("OmFileReader", () => {
 
   // // Test memory management
   // it("should properly clean up resources", async () => {
-  //   reader = new OmFileReader();
-
   //   await reader.createReader(getBytesCallback, testFileData.byteLength);
   //   reader.destroy();
 

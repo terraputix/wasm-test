@@ -27,11 +27,11 @@ CFLAGS = -I/src/om-file-format/c/include \
          -s EXPORTED_FUNCTIONS=$(EXPORTED_FUNCS) \
          -s EXPORTED_RUNTIME_METHODS=$(RUNTIME_METHODS) \
          -s INITIAL_MEMORY=67108864 \
-         -s MAXIMUM_MEMORY=67108864 \
          -s WASM_BIGINT \
+         -s FILESYSTEM=0 \
+         -s ELIMINATE_DUPLICATE_FUNCTIONS=1 \
          -Wbad-function-cast \
          -fwasm-exceptions
-
 
 # Define the source files
 SRC_FILES = /src/p4n_test.c \
