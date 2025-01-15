@@ -20,7 +20,10 @@ RUNTIME_METHODS = '[\
     "cwrap"\
 ]'
 
-CFLAGS = -I/src/om-file-format/c/include \
+INCLUDES = -I/src/C/include \
+          -I/src/om-file-format/c/include
+
+CFLAGS = $(INCLUDES) \
          -msimd128 \
          -mssse3 \
          -O3 \
@@ -34,7 +37,7 @@ CFLAGS = -I/src/om-file-format/c/include \
          -fwasm-exceptions
 
 # Define the source files
-SRC_FILES = $(wildcard /src/C/*.c) \
+SRC_FILES = $(wildcard /src/C/src/*.c) \
 			$(wildcard /src/om-file-format/c/src/*.c)
 
 DIST_DIR = dist

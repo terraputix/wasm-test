@@ -1,21 +1,10 @@
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "om_file_format.h"
-#include <emscripten.h>
+#include "om_file_reader.h"
 
-typedef enum OmFileError {
-    OM_FILE_ERROR_OK = 0,
-    OM_FILE_ERROR_OUT_OF_MEMORY,
-    OM_FILE_ERROR_NOT_AN_OM_FILE,
-    OM_FILE_ERROR_IO,
-    OM_FILE_ERROR_DECODER,
-    OM_FILE_ERROR_INVALID_ARGUMENT
-} OmFileError;
-
-// Helper function to convert OmError_t to OmFileError
+/// Helper function to convert OmError_t to OmFileError
 OmFileError convert_om_error(OmError_t error) {
     switch (error) {
         case ERROR_OK:
@@ -26,43 +15,10 @@ OmFileError convert_om_error(OmError_t error) {
     }
 }
 
-// Structure to hold JavaScript callback information
-typedef struct {
-    int get_bytes_callback;
-    size_t total_size;
-} JsBackend;
-
-// Backend interface
-typedef struct {
-    // Function pointer for getting bytes from the backend
-    OmFileError (*get_bytes)(void* backend_data, uint64_t offset, uint64_t count, uint8_t* buffer);
-    // The actual backend data (could be a file handle, etc.)
-    void* backend_data;
-    // Total size of the data
-    size_t total_size;
-} OmFileBackend;
-
-// Reader structure
-typedef struct {
-    OmFileBackend* backend;
-    uint8_t* variable_data;
-    size_t variable_data_size;
-    const OmVariable_t* variable;
-} OmFileReader;
-
-// Forward declarations
-static OmFileError js_get_bytes(void* backend_data, uint64_t offset, uint64_t count, uint8_t* buffer);
-OmFileError om_file_reader_new(const OmFileBackend* backend, OmFileReader** reader);
-void om_file_reader_free(OmFileReader* reader);
-OmFileError om_file_reader_decode(const OmFileReader* reader, OmDecoder_t* decoder,
-                                 void* output, uint8_t* chunk_buffer);
-
-
-// Helper function to handle the JavaScript callback
 static OmFileError js_get_bytes(void* backend_data, uint64_t offset, uint64_t count, uint8_t* buffer) {
     JsBackend* js_backend = (JsBackend*)backend_data;
 
-    printf("js_get_bytes called with offset: %llu, count: %llu\n", offset, count);
+    printf("js_get_bytes called with offset: %lu, count: %lu\n", offset, count);
     printf("total_size: %zu\n", js_backend->total_size);
 
     // Validate parameters
