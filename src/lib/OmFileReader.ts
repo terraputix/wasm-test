@@ -2,12 +2,13 @@ import { getWasmModule } from "./wasm";
 
 export class OmFileReader {
   private reader: number = 0;
-  private callbacks: Map<number, (offset: bigint, count: bigint) => Uint8Array>;
-  private static nextCallbackId = 1;
 
-  constructor() {
-    this.callbacks = new Map();
-  }
+  /// Callbacks are passed to the WASM module and stored in a map.
+  /// We only need one callback for now, so we use a constant ID.
+  private static readonly CALLBACK_ID = 1;
+  /// the getBytes callback that is passed to the WASM module
+  private getBytes: ((offset: bigint, count: bigint) => Uint8Array) | null =
+    null;
 
   public async createReader(
     getBytesCallback: (offset: bigint, count: bigint) => Uint8Array,
@@ -16,22 +17,26 @@ export class OmFileReader {
     const module = getWasmModule();
 
     // Store the callback
-    const callbackId = OmFileReader.nextCallbackId++;
-    this.callbacks.set(callbackId, getBytesCallback);
+    this.getBytes = getBytesCallback;
 
     // Register callback in Module
     if (!module.callbacks) {
       module.callbacks = {};
     }
 
-    module.callbacks[callbackId] = (offset: bigint, count: bigint) => {
-      const callback = this.callbacks.get(callbackId);
-      if (!callback) throw new Error("Callback not found");
-      return callback(offset, count);
+    module.callbacks[OmFileReader.CALLBACK_ID] = (
+      offset: bigint,
+      count: bigint,
+    ) => {
+      if (!this.getBytes) throw new Error("Callback not initialized");
+      return this.getBytes(offset, count);
     };
 
     // Create the reader
-    this.reader = module._create_reader_from_js(callbackId, totalSize);
+    this.reader = module._create_reader_from_js(
+      OmFileReader.CALLBACK_ID,
+      totalSize,
+    );
     if (this.reader === 0) {
       throw new Error("Failed to create reader");
     }
@@ -137,9 +142,12 @@ export class OmFileReader {
       const module = getWasmModule();
       module._destroy_reader(this.reader);
       this.reader = 0;
+      this.getBytes = null;
 
       // Clean up callbacks
-      this.callbacks.clear();
+      if (module.callbacks) {
+        delete module.callbacks[OmFileReader.CALLBACK_ID];
+      }
     }
   }
 }
