@@ -30,6 +30,8 @@ describe("OmFileReader", () => {
     await initWasm();
 
     // Load the test file
+    // Currently this file is not committed to the repository
+    // Thus we skip tests in CI according to the vitest configuration
     const filePath = path.join(__dirname, "../../test-data/read_test.om");
     const fileBuffer = await fs.readFile(filePath);
     testFileData = fileBuffer.buffer;
