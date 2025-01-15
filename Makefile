@@ -34,9 +34,7 @@ CFLAGS = -I/src/om-file-format/c/include \
          -fwasm-exceptions
 
 # Define the source files
-SRC_FILES = /src/C/p4n_test.c \
-			/src/C/om_file_reader.c \
-			/src/C/test_turbopfor_wasm.c \
+SRC_FILES = $(wildcard /src/C/*.c) \
 			$(wildcard /src/om-file-format/c/src/*.c)
 
 DIST_DIR = dist
