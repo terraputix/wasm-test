@@ -18,9 +18,6 @@ OmFileError convert_om_error(OmError_t error) {
 static OmFileError js_get_bytes(void* backend_data, uint64_t offset, uint64_t count, uint8_t* buffer) {
     JsBackend* js_backend = (JsBackend*)backend_data;
 
-    printf("js_get_bytes called with offset: %lu, count: %lu\n", offset, count);
-    printf("total_size: %zu\n", js_backend->total_size);
-
     // Validate parameters
     if (offset + count > js_backend->total_size) {
         return OM_FILE_ERROR_INVALID_ARGUMENT;
@@ -87,8 +84,6 @@ OmFileReader* create_reader_from_js(int callback_index, size_t total_size) {
     OmFileReader* reader = NULL;
     OmFileError error = om_file_reader_new(backend, &reader);
 
-    printf("Reader created with error: %d\n", error);
-
     if (error != OM_FILE_ERROR_OK) {
         free(js_backend);
         free(backend);
@@ -111,20 +106,6 @@ OmFileError decode_with_reader(
     uint64_t io_size_max,     // Optional, will use default if 0
     uint64_t io_size_merge    // Optional, will use default if 0
 ) {
-
-    // Debug input parameters
-    printf("Decoding with parameters:\n");
-    printf("  reader: %p\n", (void*)reader);
-    printf("  output: %p\n", (void*)output);
-    printf("  output_size: %zu\n", output_size);
-    printf("  dim_read_start: %p\n", (void*)dim_read_start);
-    printf("  dim_read_end: %p\n", (void*)dim_read_end);
-    printf("  into_cube_offset: %p\n", (void*)into_cube_offset);
-    printf("  into_cube_dimension: %p\n", (void*)into_cube_dimension);
-    printf("  dimension_count: %llu\n", dimension_count);
-    printf("  io_size_max: %llu\n", io_size_max);
-    printf("  io_size_merge: %llu\n", io_size_merge);
-
     if (!reader || !output || !dim_read_start || !dim_read_end ||
         !into_cube_offset || !into_cube_dimension) {
         return OM_FILE_ERROR_INVALID_ARGUMENT;
@@ -139,8 +120,6 @@ OmFileError decode_with_reader(
     //     return OM_FILE_ERROR_INVALID_ARGUMENT;
     // }
 
-    printf("Preparing to decode with reader\n");
-
     // Prepare read parameters
     uint64_t* read_offset = malloc(dimension_count * sizeof(uint64_t));
     uint64_t* read_count = malloc(dimension_count * sizeof(uint64_t));
@@ -153,9 +132,6 @@ OmFileError decode_with_reader(
         return OM_FILE_ERROR_OUT_OF_MEMORY;
     }
 
-    printf("Calculate read_count from start and end positions\n");
-
-    printf("Looping from 0 to %llu\n", dimension_count);
     // Add bounds check
     if (dimension_count > 1000) { // or some reasonable maximum
         printf("Warning: Suspicious dimension_count value\n");
@@ -164,12 +140,9 @@ OmFileError decode_with_reader(
 
     // Calculate read_count from start and end positions
     for (uint64_t i = 0; i < dimension_count; i++) {
-        printf("Loop iteration %llu\n", i);
         read_offset[i] = dim_read_start[i];
         read_count[i] = dim_read_end[i] - dim_read_start[i];
     }
-
-    printf("Initialize decoder\n");
 
     // Initialize decoder
     OmDecoder_t decoder;
@@ -197,19 +170,12 @@ OmFileError decode_with_reader(
 
     // Allocate chunk buffer with proper size
     uint64_t chunk_buffer_size = om_decoder_read_buffer_size(&decoder);
-    printf("CHUNK_BUFFER_SIZE: %llu\n", chunk_buffer_size);
     uint8_t* chunk_buffer = malloc(chunk_buffer_size);
     if (!chunk_buffer) {
         return OM_FILE_ERROR_OUT_OF_MEMORY;
     }
-
-    printf("Before decoding chunks - first few output values: %d %d %d\n",
-           output[0], output[1], output[2]);
     // Perform decoding
     OmFileError error = om_file_reader_decode(reader, &decoder, output, chunk_buffer);
-
-    printf("After decoding chunks - first few output values: %d %d %d\n",
-           output[0], output[1], output[2]);
 
     free(chunk_buffer);
     return error;
@@ -269,8 +235,6 @@ OmFileError om_file_reader_new(const OmFileBackend* backend, OmFileReader** read
 
     OmHeaderType_t header_type = om_header_type(header_data);
 
-    printf("Header type: %d\n", header_type);
-
     if (header_type == OM_HEADER_INVALID) {
         cleanup_and_free(header_data, NULL, new_reader);
         return OM_FILE_ERROR_NOT_AN_OM_FILE;
@@ -326,65 +290,14 @@ OmFileError om_file_reader_decode(const OmFileReader* reader, OmDecoder_t* decod
         return OM_FILE_ERROR_INVALID_ARGUMENT;
     }
 
-    printf("Main decode loop \n");
-
     OmError_t om_error = ERROR_OK;
     OmDecoder_indexRead_t index_read;
 
     om_decoder_init_index_read(decoder, &index_read);
 
-    printf("blub\n");
-
-    printf("Decoder state:\n");
-    printf("  dimensions_count: %llu\n", decoder->dimensions_count);
-    printf("  io_size_merge: %llu\n", decoder->io_size_merge);
-    printf("  io_size_max: %llu\n", decoder->io_size_max);
-    printf("  lut_chunk_length: %llu\n", decoder->lut_chunk_length);
-    printf("  lut_start: %llu\n", decoder->lut_start);
-    printf("  number_of_chunks: %llu\n", decoder->number_of_chunks);
-
-    printf("  dimensions:\n");
-    for (uint64_t i = 0; i < decoder->dimensions_count; i++) {
-        printf("    [%llu]: %llu\n", i, decoder->dimensions[i]);
-    }
-
-    printf("  chunks:\n");
-    for (uint64_t i = 0; i < decoder->dimensions_count; i++) {
-        printf("    [%llu]: %llu\n", i, decoder->chunks[i]);
-    }
-
-    printf("  read_offset:\n");
-    for (uint64_t i = 0; i < decoder->dimensions_count; i++) {
-        printf("    [%llu]: %llu\n", i, decoder->read_offset[i]);
-    }
-
-    printf("  read_count:\n");
-    for (uint64_t i = 0; i < decoder->dimensions_count; i++) {
-        printf("    [%llu]: %llu\n", i, decoder->read_count[i]);
-    }
-
-    printf("  cube_dimensions:\n");
-    for (uint64_t i = 0; i < decoder->dimensions_count; i++) {
-        printf("    [%llu]: %llu\n", i, decoder->cube_dimensions[i]);
-    }
-
-    printf("  cube_offset:\n");
-    for (uint64_t i = 0; i < decoder->dimensions_count; i++) {
-        printf("    [%llu]: %llu\n", i, decoder->cube_offset[i]);
-    }
-
-    printf("  scale_factor: %f\n", decoder->scale_factor);
-    printf("  add_offset: %f\n", decoder->add_offset);
-
-
-    printf("Location of om_decoder_next_index_read: %p\n", (void*)om_decoder_next_index_read);
-
     while (om_decoder_next_index_read(decoder, &index_read)) {
         uint8_t* index_data = malloc(index_read.count);
         if (!index_data) return OM_FILE_ERROR_OUT_OF_MEMORY;
-
-        printf("index_read.offset %llu \n", index_read.offset);
-        printf("index_read.count %llu \n", index_read.count);
 
         OmFileError error = reader->backend->get_bytes(
             reader->backend->backend_data,
@@ -410,8 +323,6 @@ OmFileError om_file_reader_decode(const OmFileReader* reader, OmDecoder_t* decod
                 return OM_FILE_ERROR_OUT_OF_MEMORY;
             }
 
-            printf("Trying to get bytes\n");
-
             error = reader->backend->get_bytes(
                 reader->backend->backend_data,
                 data_read.offset,
@@ -419,27 +330,11 @@ OmFileError om_file_reader_decode(const OmFileReader* reader, OmDecoder_t* decod
                 data
             );
 
-            printf("Got bytes\n");
-            printf("Data at ptr: ");
-            for (int i = 0; i < data_read.count; i++) {
-                printf("%d ", data[i]);
-            }
-            printf("\n");
-            printf("Error: %d\n", error);
-
             if (error != OM_FILE_ERROR_OK) {
                 // free(data);
                 free(index_data);
                 return error;
             }
-
-            printf("Trying to decode chunks\n");
-            printf("Calling om_decoder_decode_chunks with:\n");
-            printf("  decoder: %p\n", (void*)decoder);
-            printf("  data: %p\n", (void*)data);
-            printf("  count: %llu\n", data_read.count);
-            printf("  output: %p\n", output);
-            printf("  chunk_buffer: %p\n", (void*)chunk_buffer);
 
             if (!om_decoder_decode_chunks(
                 decoder,
@@ -454,7 +349,6 @@ OmFileError om_file_reader_decode(const OmFileReader* reader, OmDecoder_t* decod
                 // free(data);
                 // printf("Freed data\n");
                 free(index_data);
-                printf("Freed index_data\n");
                 return convert_om_error(om_error);
             }
             free(data);
