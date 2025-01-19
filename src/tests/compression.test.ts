@@ -17,6 +17,17 @@ describe("P4N Compression", () => {
     expect(module).toBeDefined();
   });
 
+  it("should correctly decompress data", async () => {
+    const module = getWasmModule();
+    expect(module).toBeDefined();
+
+    // Call the test function
+    const result = module._test_p4nzdec128v16();
+
+    // Check if test passed (1 = success, 0 = failure)
+    expect(result).toBe(1);
+  });
+
   it("should compress and decompress data correctly", async () => {
     const module = getWasmModule();
     const compressor = new P4NCompressor();
@@ -81,8 +92,7 @@ describe("P4N Compression", () => {
       const end = performance.now();
 
       const compressionTime = end - start;
-      const speedMBps =
-        (data.length * 2) / 1024 / 1024 / (compressionTime / 1000);
+      const speedMBps = (data.length * 2) / 1024 / 1024 / (compressionTime / 1000);
 
       // Assert reasonable performance metrics
       expect(compressionTime).toBeGreaterThan(0);

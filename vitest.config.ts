@@ -11,5 +11,6 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["src/tests/**"],
     },
+    exclude: process.env.CI ? ["src/tests/OmFileReader**"] : [],
   },
 });

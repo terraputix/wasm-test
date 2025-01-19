@@ -4,7 +4,7 @@ export async function initWasm(): Promise<void> {
   if (wasmModule) return;
 
   try {
-    const mod = await import("../../dist/wasm/p4n_test.js");
+    const mod = await import("../../dist/wasm/om_reader_wasm.js");
     wasmModule = mod.default;
 
     // Wait for the module to be fully initialized
