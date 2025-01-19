@@ -8,12 +8,11 @@ export class OmFileReader {
   /// We only need one callback for now, so we use a constant ID.
   private static readonly CALLBACK_ID = 1;
   /// the getBytes callback that is passed to the WASM module
-  private getBytes: ((offset: bigint, count: bigint) => Uint8Array) | null =
-    null;
+  private getBytes: ((offset: bigint, count: bigint) => Uint8Array) | null = null;
 
   public async createReader(
     getBytesCallback: (offset: bigint, count: bigint) => Uint8Array,
-    totalSize: number,
+    totalSize: number
   ): Promise<void> {
     const module = getWasmModule();
 
@@ -25,19 +24,13 @@ export class OmFileReader {
       module.callbacks = {};
     }
 
-    module.callbacks[OmFileReader.CALLBACK_ID] = (
-      offset: bigint,
-      count: bigint,
-    ) => {
+    module.callbacks[OmFileReader.CALLBACK_ID] = (offset: bigint, count: bigint) => {
       if (!this.getBytes) throw new Error("Callback not initialized");
       return this.getBytes(offset, count);
     };
 
     // Create the reader
-    this.reader = module._create_reader_from_js(
-      OmFileReader.CALLBACK_ID,
-      totalSize,
-    );
+    this.reader = module._create_reader_from_js(OmFileReader.CALLBACK_ID, totalSize);
     if (this.reader === 0) {
       throw new Error("Failed to create reader");
     }
@@ -51,9 +44,12 @@ export class OmFileReader {
     intoCubeOffset: BigInt64Array,
     intoCubeDimension: BigInt64Array,
     ioSizeMax: BigInt = BigInt(65536),
-    ioSizeMerge: BigInt = BigInt(512),
-  ): number {
-    const module = getWasmModule();
+    ioSizeMerge: BigInt = BigInt(512)
+  ): void {
+    // Check if reader is initialized
+    if (this.reader === 0) {
+      throw new Error("Reader not initialized");
+    }
 
     // Check that output array is large enough
     const totalSize = dimReadEnd.reduce((acc, end, i) => {
@@ -64,12 +60,15 @@ export class OmFileReader {
       throw new Error("Output array too small");
     }
 
+    // TODO: Check data type compatibility with output array
+
+    const module = getWasmModule();
     // Convert TypedArray to raw bytes
     const outputBytes = new Uint8Array(output.buffer);
     // Create output buffer in WASM memory
     const outputPtr = module._malloc(outputBytes.length);
     if (outputPtr === 0) {
-      return 5; // FIXME: appropriate error code
+      throw new Error("Failed to allocate memory for output");
     }
 
     // Allocate memory for arrays
@@ -82,32 +81,15 @@ export class OmFileReader {
     const dimensionPtr = module._malloc(dimCount * 8);
 
     // Verify memory alignment for 64-bit values
-    if (
-      startPtr % 8 !== 0 ||
-      endPtr % 8 !== 0 ||
-      offsetPtr % 8 !== 0 ||
-      dimensionPtr % 8 !== 0
-    ) {
+    if (startPtr % 8 !== 0 || endPtr % 8 !== 0 || offsetPtr % 8 !== 0 || dimensionPtr % 8 !== 0) {
       throw new Error("Memory not properly aligned for 64-bit values");
     }
 
     // Create separate views for each memory region
-    const startView = new BigInt64Array(
-      module.HEAPU8.buffer,
-      startPtr,
-      dimCount,
-    );
+    const startView = new BigInt64Array(module.HEAPU8.buffer, startPtr, dimCount);
     const endView = new BigInt64Array(module.HEAPU8.buffer, endPtr, dimCount);
-    const offsetView = new BigInt64Array(
-      module.HEAPU8.buffer,
-      offsetPtr,
-      dimCount,
-    );
-    const dimensionView = new BigInt64Array(
-      module.HEAPU8.buffer,
-      dimensionPtr,
-      dimCount,
-    );
+    const offsetView = new BigInt64Array(module.HEAPU8.buffer, offsetPtr, dimCount);
+    const dimensionView = new BigInt64Array(module.HEAPU8.buffer, dimensionPtr, dimCount);
 
     // Copy arrays to their respective memory regions
     startView.set(dimReadStart);
@@ -127,20 +109,17 @@ export class OmFileReader {
         dimensionPtr,
         BigInt(dimCount),
         ioSizeMax,
-        ioSizeMerge,
+        ioSizeMerge
       );
 
       // Copy result back to output array
       // OM_FILE_ERROR_OK
       if (result === 0) {
-        const outputView = new Uint8Array(
-          module.HEAPU8.buffer,
-          outputPtr,
-          output.length,
-        );
+        const outputView = new Uint8Array(module.HEAPU8.buffer, outputPtr, output.length);
         outputBytes.set(outputView);
+      } else {
+        throw new Error("Error decoding data. Error code: " + result);
       }
-      return result;
     } finally {
       // Clean up allocated memory
       module._free(startPtr);
@@ -156,12 +135,12 @@ export class OmFileReader {
       const module = getWasmModule();
       module._destroy_reader(this.reader);
       this.reader = 0;
-      this.getBytes = null;
 
       // Clean up callbacks
       if (module.callbacks) {
         delete module.callbacks[OmFileReader.CALLBACK_ID];
       }
+      this.getBytes = null;
     }
   }
 }

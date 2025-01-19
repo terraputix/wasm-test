@@ -92,8 +92,7 @@ describe("P4N Compression", () => {
       const end = performance.now();
 
       const compressionTime = end - start;
-      const speedMBps =
-        (data.length * 2) / 1024 / 1024 / (compressionTime / 1000);
+      const speedMBps = (data.length * 2) / 1024 / 1024 / (compressionTime / 1000);
 
       // Assert reasonable performance metrics
       expect(compressionTime).toBeGreaterThan(0);

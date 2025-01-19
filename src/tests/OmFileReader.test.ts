@@ -16,10 +16,7 @@ describe("OmFileReader", () => {
     const countNum = Number(count);
 
     // Add safety checks
-    if (
-      offsetNum > Number.MAX_SAFE_INTEGER ||
-      countNum > Number.MAX_SAFE_INTEGER
-    ) {
+    if (offsetNum > Number.MAX_SAFE_INTEGER || countNum > Number.MAX_SAFE_INTEGER) {
       throw new Error("Offset or count exceeds safe integer range");
     }
 
@@ -49,9 +46,7 @@ describe("OmFileReader", () => {
   });
 
   it("should successfully create a reader", async () => {
-    await expect(
-      reader.createReader(getBytesCallback, testFileData.byteLength),
-    ).resolves.not.toThrow();
+    await expect(reader.createReader(getBytesCallback, testFileData.byteLength)).resolves.not.toThrow();
   });
 
   it("should fail to create reader with invalid callback", async () => {
@@ -59,9 +54,7 @@ describe("OmFileReader", () => {
       throw new Error("Invalid callback");
     };
 
-    await expect(
-      reader.createReader(invalidCallback, testFileData.byteLength),
-    ).rejects.toThrow();
+    await expect(reader.createReader(invalidCallback, testFileData.byteLength)).rejects.toThrow();
   });
 
   it("should successfully decode data", async () => {
@@ -75,18 +68,16 @@ describe("OmFileReader", () => {
     const intoCubeOffset = new BigInt64Array([0n, 0n, 0n]);
     const intoCubeDimension = new BigInt64Array([10n, 10n, 10n]);
 
-    const result = reader.decode(
-      output,
-      OmDataType.DATA_TYPE_FLOAT_ARRAY,
-      dimReadStart,
-      dimReadEnd,
-      intoCubeOffset,
-      intoCubeDimension,
-    );
-
-    expect(result).toBe(0); // OM_FILE_ERROR_OK
-    // Add more specific expectations about the decoded data
-    expect(output).not.toEqual(new Uint8Array(outputSize)); // Should not be all zeros
+    expect(() =>
+      reader.decode(
+        output,
+        OmDataType.DATA_TYPE_FLOAT_ARRAY,
+        dimReadStart,
+        dimReadEnd,
+        intoCubeOffset,
+        intoCubeDimension
+      )
+    ).not.toThrow();
 
     expect(Array.from(output.slice(0, 10))).toEqual(
       expect.arrayContaining([
@@ -100,7 +91,7 @@ describe("OmFileReader", () => {
         expect.closeTo(-26.45, 0.001),
         expect.closeTo(-26.2, 0.001),
         expect.closeTo(-26.2, 0.001),
-      ]),
+      ])
     );
   });
 
@@ -113,16 +104,16 @@ describe("OmFileReader", () => {
     const intoCubeOffset = new BigInt64Array([0n]);
     const intoCubeDimension = new BigInt64Array([10n]);
 
-    const result = reader.decode(
-      output,
-      OmDataType.DATA_TYPE_FLOAT_ARRAY,
-      dimReadStart,
-      dimReadEnd,
-      intoCubeOffset,
-      intoCubeDimension,
-    );
-
-    expect(result).not.toBe(0); // Should return an error
+    expect(() =>
+      reader.decode(
+        output,
+        OmDataType.DATA_TYPE_FLOAT_ARRAY,
+        dimReadStart,
+        dimReadEnd,
+        intoCubeOffset,
+        intoCubeDimension
+      )
+    ).toThrow();
   });
 
   it("should handle out-of-bounds reads", async () => {
@@ -143,31 +134,31 @@ describe("OmFileReader", () => {
         dimReadStart,
         dimReadEnd,
         intoCubeOffset,
-        intoCubeDimension,
-      ),
+        intoCubeDimension
+      )
     ).toThrow();
   });
 
-  // // Test memory management
-  // it("should properly clean up resources", async () => {
-  //   await reader.createReader(getBytesCallback, testFileData.byteLength);
-  //   reader.destroy();
+  it("should properly clean up resources", async () => {
+    await reader.createReader(getBytesCallback, testFileData.byteLength);
+    reader.destroy();
 
-  //   // Attempting to use the reader after destruction should throw
-  //   const output = new Uint8Array(1000);
-  //   const dimReadStart = new BigInt64Array([0n, 0n, 0n]);
-  //   const dimReadEnd = new BigInt64Array([10n, 10n, 10n]);
-  //   const intoCubeOffset = new BigInt64Array([0n, 0n, 0n]);
-  //   const intoCubeDimension = new BigInt64Array([10n, 10n, 10n]);
+    // Attempting to use the reader after destruction should throw
+    const output = new Uint8Array(1000);
+    const dimReadStart = new BigInt64Array([0n, 0n, 0n]);
+    const dimReadEnd = new BigInt64Array([10n, 10n, 10n]);
+    const intoCubeOffset = new BigInt64Array([0n, 0n, 0n]);
+    const intoCubeDimension = new BigInt64Array([10n, 10n, 10n]);
 
-  //   expect(() =>
-  //     reader.decode(
-  //       output,
-  //       dimReadStart,
-  //       dimReadEnd,
-  //       intoCubeOffset,
-  //       intoCubeDimension,
-  //     ),
-  //   ).toThrow();
-  // });
+    expect(() =>
+      reader.decode(
+        output,
+        OmDataType.DATA_TYPE_FLOAT_ARRAY,
+        dimReadStart,
+        dimReadEnd,
+        intoCubeOffset,
+        intoCubeDimension
+      )
+    ).toThrow();
+  });
 });
