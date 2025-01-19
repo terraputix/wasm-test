@@ -3,6 +3,7 @@ import { initWasm } from "../lib/wasm";
 import { OmFileReader } from "../lib/OmFileReader";
 import fs from "fs/promises";
 import path from "path";
+import { OmDataType } from "../lib/types";
 
 describe("OmFileReader", () => {
   let testFileData: ArrayBuffer;
@@ -68,7 +69,7 @@ describe("OmFileReader", () => {
 
     // Adjust these values according to your test file's dimensions
     const outputSize = 5000; // Adjust based on your test data
-    const output = new Uint8Array(outputSize);
+    const output = new Float32Array(outputSize);
     const dimReadStart = new BigInt64Array([0n, 0n, 0n]);
     const dimReadEnd = new BigInt64Array([10n, 10n, 10n]);
     const intoCubeOffset = new BigInt64Array([0n, 0n, 0n]);
@@ -76,6 +77,7 @@ describe("OmFileReader", () => {
 
     const result = reader.decode(
       output,
+      OmDataType.DATA_TYPE_FLOAT_ARRAY,
       dimReadStart,
       dimReadEnd,
       intoCubeOffset,
@@ -86,14 +88,7 @@ describe("OmFileReader", () => {
     // Add more specific expectations about the decoded data
     expect(output).not.toEqual(new Uint8Array(outputSize)); // Should not be all zeros
 
-    // Interpret output as float array
-    const floatArray = new Float32Array(
-      output.buffer,
-      output.byteOffset,
-      output.length / 4,
-    );
-
-    expect(Array.from(floatArray.slice(0, 10))).toEqual(
+    expect(Array.from(output.slice(0, 10))).toEqual(
       expect.arrayContaining([
         expect.closeTo(-24.25, 0.001),
         expect.closeTo(-24.75, 0.001),
@@ -112,7 +107,7 @@ describe("OmFileReader", () => {
   it("should fail with invalid dimensions", async () => {
     await reader.createReader(getBytesCallback, testFileData.byteLength);
 
-    const output = new Uint8Array(1000);
+    const output = new Float32Array(1000);
     const dimReadStart = new BigInt64Array([0n]); // Invalid dimension count
     const dimReadEnd = new BigInt64Array([10n]);
     const intoCubeOffset = new BigInt64Array([0n]);
@@ -120,6 +115,7 @@ describe("OmFileReader", () => {
 
     const result = reader.decode(
       output,
+      OmDataType.DATA_TYPE_FLOAT_ARRAY,
       dimReadStart,
       dimReadEnd,
       intoCubeOffset,

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "om_file_reader.h"
+#include "om_common.h"
 
 /// Helper function to convert OmError_t to OmFileError
 OmFileError convert_om_error(OmError_t error) {
@@ -98,6 +99,7 @@ OmFileError decode_with_reader(
     OmFileReader* reader,
     uint8_t* output,
     size_t output_size,
+    OmDataType_t data_type,
     const uint64_t* dim_read_start,  // Array of start positions
     const uint64_t* dim_read_end,    // Array of end positions
     const uint64_t* into_cube_offset,
@@ -115,16 +117,14 @@ OmFileError decode_with_reader(
     if (io_size_max == 0) io_size_max = 65536;
     if (io_size_merge == 0) io_size_merge = 512;
 
-    // Verify data type (you'll need to implement this based on your needs)
-    // if (data_type != reader->variable->data_type) {
-    //     return OM_FILE_ERROR_INVALID_ARGUMENT;
-    // }
+    // Verify data type
+    if (data_type != om_variable_get_type(reader->variable)) {
+        return OM_FILE_ERROR_DATA_TYPE_MISMATCH;
+    }
 
     // Prepare read parameters
     uint64_t* read_offset = malloc(dimension_count * sizeof(uint64_t));
     uint64_t* read_count = malloc(dimension_count * sizeof(uint64_t));
-
-    printf("Allocated read_offset and read_count\n");
 
     if (!read_offset || !read_count) {
         free(read_offset);

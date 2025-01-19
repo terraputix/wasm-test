@@ -11,7 +11,8 @@ typedef enum OmFileError {
     OM_FILE_ERROR_NOT_AN_OM_FILE,
     OM_FILE_ERROR_IO,
     OM_FILE_ERROR_DECODER,
-    OM_FILE_ERROR_INVALID_ARGUMENT
+    OM_FILE_ERROR_INVALID_ARGUMENT,
+    OM_FILE_ERROR_DATA_TYPE_MISMATCH,
 } OmFileError;
 
 /// Structure to hold JavaScript callback information

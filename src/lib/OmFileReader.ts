@@ -1,3 +1,4 @@
+import { OmDataType, TypedArray } from "./types";
 import { getWasmModule } from "./wasm";
 
 export class OmFileReader {
@@ -42,8 +43,9 @@ export class OmFileReader {
     }
   }
 
-  public decode(
-    output: Uint8Array,
+  public decode<T extends TypedArray>(
+    output: T,
+    dataType: OmDataType,
     dimReadStart: BigInt64Array,
     dimReadEnd: BigInt64Array,
     intoCubeOffset: BigInt64Array,
@@ -52,6 +54,11 @@ export class OmFileReader {
     ioSizeMerge: BigInt = BigInt(512),
   ): number {
     const module = getWasmModule();
+
+    // Convert TypedArray to raw bytes
+    const outputBytes = new Uint8Array(output.buffer);
+    // Create output buffer in WASM memory
+    const outputPtr = module._malloc(outputBytes.length);
 
     // Allocate memory for arrays
     const dimCount = dimReadStart.length;
@@ -96,14 +103,12 @@ export class OmFileReader {
     offsetView.set(intoCubeOffset);
     dimensionView.set(intoCubeDimension);
 
-    // Create output buffer in WASM memory
-    const outputPtr = module._malloc(output.length);
-
     try {
       const result = module._decode_with_reader(
         this.reader,
         outputPtr,
         output.length,
+        dataType,
         startPtr,
         endPtr,
         offsetPtr,
@@ -123,7 +128,7 @@ export class OmFileReader {
           output.length,
         );
         console.log("outputView", outputView);
-        output.set(outputView);
+        outputBytes.set(outputView);
       }
 
       return result;
