@@ -55,10 +55,22 @@ export class OmFileReader {
   ): number {
     const module = getWasmModule();
 
+    // Check that output array is large enough
+    const totalSize = dimReadEnd.reduce((acc, end, i) => {
+      return acc * (end - dimReadStart[i]);
+    }, 1n);
+
+    if (totalSize > BigInt(output.length)) {
+      throw new Error("Output array too small");
+    }
+
     // Convert TypedArray to raw bytes
     const outputBytes = new Uint8Array(output.buffer);
     // Create output buffer in WASM memory
     const outputPtr = module._malloc(outputBytes.length);
+    if (outputPtr === 0) {
+      return 5; // FIXME: appropriate error code
+    }
 
     // Allocate memory for arrays
     const dimCount = dimReadStart.length;
@@ -121,16 +133,13 @@ export class OmFileReader {
       // Copy result back to output array
       // OM_FILE_ERROR_OK
       if (result === 0) {
-        console.log("outputPtr", outputPtr);
         const outputView = new Uint8Array(
           module.HEAPU8.buffer,
           outputPtr,
           output.length,
         );
-        console.log("outputView", outputView);
         outputBytes.set(outputView);
       }
-
       return result;
     } finally {
       // Clean up allocated memory

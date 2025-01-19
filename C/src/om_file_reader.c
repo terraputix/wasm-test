@@ -16,51 +16,52 @@ OmFileError convert_om_error(OmError_t error) {
   }
 }
 
-static OmFileError js_get_bytes(void *backend_data, uint64_t offset,
-                                uint64_t count, uint8_t *buffer) {
-  JsBackend *js_backend = (JsBackend *)backend_data;
+static OmFileError js_get_bytes(void* backend_data, uint64_t offset, uint64_t count, uint8_t* buffer) {
+    JsBackend* js_backend = (JsBackend*)backend_data;
 
-  // Validate parameters
-  if (offset + count > js_backend->total_size) {
-    return OM_FILE_ERROR_INVALID_ARGUMENT;
-  }
+    // Validate parameters
+    if (offset + count > js_backend->total_size) {
+        return OM_FILE_ERROR_INVALID_ARGUMENT;
+    }
 
-  if (!buffer) {
-    return OM_FILE_ERROR_INVALID_ARGUMENT;
-  }
+    if (!buffer) {
+        return OM_FILE_ERROR_INVALID_ARGUMENT;
+    }
 
-  int result = EM_ASM_INT(
-      {
+    int result = EM_ASM_INT({
         try {
-          const callback = Module.callbacks[$0];
-          const offset = $1;
-          const count = $2;
-          const buffer = $3;
+            const callback = Module.callbacks[$0];
+            const offset = $1;
+            const count = $2;
+            const buffer = $3;
 
-          const result = callback(offset, count);
+            const result = callback(offset, count);
 
-          // Validate returned data
-          if (!(result instanceof Uint8Array)) {
-            console.error('Invalid return type from callback');
-            return 3; // OM_FILE_ERROR_IO
-          }
+            // Validate returned data
+            if (!(result instanceof Uint8Array)) {
+                console.error('Invalid return type from callback');
+                return 3; // OM_FILE_ERROR_IO
+            }
 
-          if (result.length != = Number(count)) {
-            console.error('count:', count, 'result.length:', result.length);
-            console.error('Callback returned wrong number of bytes');
-            return 3; // OM_FILE_ERROR_IO
-          }
+            if (result.length !== Number(count)) {
+                console.error('count:', count, 'result.length:', result.length);
+                console.error('Callback returned wrong number of bytes');
+                return 3; // OM_FILE_ERROR_IO
+            }
 
-          HEAPU8.set(result, buffer);
-          return 0; // OM_FILE_ERROR_OK
+            HEAPU8.set(result, buffer);
+            return 0; // OM_FILE_ERROR_OK
         } catch (error) {
-          console.error('Error in get_bytes:', error);
-          return 3; // OM_FILE_ERROR_IO
+            console.error('Error in get_bytes:', error);
+            return 3; // OM_FILE_ERROR_IO
         }
-      },
-      js_backend->get_bytes_callback, offset, count, buffer);
+    }, js_backend->get_bytes_callback,
+        offset,
+        count,
+        buffer
+    );
 
-  return (OmFileError)result;
+    return (OmFileError)result;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -132,6 +133,7 @@ decode_with_reader(OmFileReader *reader, uint8_t *output, size_t output_size,
     return OM_FILE_ERROR_OUT_OF_MEMORY;
   }
 
+  printf("Dimension count: %llu\n", dimension_count);
   // Add bounds check
   if (dimension_count > 1000) { // or some reasonable maximum
     printf("Warning: Suspicious dimension_count value\n");
@@ -150,8 +152,6 @@ decode_with_reader(OmFileReader *reader, uint8_t *output, size_t output_size,
       &decoder, reader->variable, dimension_count, read_offset, read_count,
       into_cube_offset, into_cube_dimension, io_size_merge, io_size_max);
 
-  printf("Decoder initialized with error: %d\n", init_error);
-
   // Free arrays that are no longer needed
   // free(read_offset);
   // free(read_count);
@@ -166,6 +166,8 @@ decode_with_reader(OmFileReader *reader, uint8_t *output, size_t output_size,
   if (!chunk_buffer) {
     return OM_FILE_ERROR_OUT_OF_MEMORY;
   }
+
+  printf("Performing decoding\n");
   // Perform decoding
   OmFileError error =
       om_file_reader_decode(reader, &decoder, output, chunk_buffer);
@@ -183,7 +185,8 @@ void destroy_reader(OmFileReader *reader) {
       }
       free(reader->backend);
     }
-    om_file_reader_free(reader);
+    free(reader->variable_data);
+    free(reader);
   }
 }
 
@@ -313,6 +316,7 @@ OmFileError om_file_reader_decode(const OmFileReader *reader,
 
     while (om_decoder_next_data_read(decoder, &data_read, index_data,
                                      index_read.count, &om_error)) {
+      printf("Data read offset: %llu\n", data_read.offset);
       uint8_t *data = malloc(data_read.count);
       if (!data) {
         free(index_data);
@@ -324,6 +328,7 @@ OmFileError om_file_reader_decode(const OmFileReader *reader,
                                      data_read.offset, data_read.count, data);
 
       if (error != OM_FILE_ERROR_OK) {
+        printf("Error in get_bytes %d\n", error);
         // free(data);
         free(index_data);
         return error;
@@ -349,11 +354,4 @@ OmFileError om_file_reader_decode(const OmFileReader *reader,
   }
 
   return OM_FILE_ERROR_OK;
-}
-
-void om_file_reader_free(OmFileReader *reader) {
-  if (reader) {
-    free(reader->variable_data);
-    free(reader);
-  }
 }

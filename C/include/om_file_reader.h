@@ -86,9 +86,6 @@ static OmFileError js_get_bytes(void *backend_data, uint64_t offset,
 OmFileError om_file_reader_new(const OmFileBackend *backend,
                                OmFileReader **reader);
 
-// Free the memory allocated for the reader
-void om_file_reader_free(OmFileReader *reader);
-
 // Decode a variable from the OM file format -> main decode function
 OmFileError om_file_reader_decode(const OmFileReader *reader,
                                   OmDecoder_t *decoder, void *output,
