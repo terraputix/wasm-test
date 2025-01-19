@@ -1,4 +1,4 @@
-import { OmDataType, TypedArray } from "./types";
+import { createArray, DataTypeToArray, OmDataType, TypedArray, ValidDataTypes } from "./types";
 import { getWasmModule } from "./wasm";
 
 export class OmFileReader {
@@ -36,7 +36,7 @@ export class OmFileReader {
     }
   }
 
-  public decode<T extends TypedArray>(
+  public readInto<T extends TypedArray>(
     output: T,
     dataType: OmDataType,
     dimReadStart: BigInt64Array,
@@ -128,6 +128,40 @@ export class OmFileReader {
       module._free(dimensionPtr);
       module._free(outputPtr);
     }
+  }
+
+  public read<T extends ValidDataTypes>(
+    dataType: T,
+    dimReadRanges: Array<{ start: bigint; end: bigint }>,
+    ioSizeMax: BigInt = BigInt(65536),
+    ioSizeMerge: BigInt = BigInt(512)
+  ): DataTypeToArray[T] {
+    // Calculate dimensions and total size
+    const outDims = dimReadRanges.map((range) => range.end - range.start);
+    const totalSize = outDims.reduce((acc, dim) => acc * dim, 1n);
+
+    // Create arrays for the C function
+    const dimCount = dimReadRanges.length;
+    const dimReadStart = new BigInt64Array(dimReadRanges.map((r) => r.start));
+    const dimReadEnd = new BigInt64Array(dimReadRanges.map((r) => r.end));
+    const intoCubeOffset = new BigInt64Array(dimCount); // Zeros
+    const intoCubeDimension = new BigInt64Array(outDims);
+
+    let output = createArray(dataType, Number(totalSize)) as DataTypeToArray[T];
+
+    // Use readInto to fill the array
+    this.readInto(
+      output,
+      dataType,
+      dimReadStart,
+      dimReadEnd,
+      intoCubeOffset,
+      intoCubeDimension,
+      ioSizeMax,
+      ioSizeMerge
+    );
+
+    return output;
   }
 
   public destroy(): void {

@@ -57,7 +57,36 @@ describe("OmFileReader", () => {
     await expect(reader.createReader(invalidCallback, testFileData.byteLength)).rejects.toThrow();
   });
 
-  it("should successfully decode data", async () => {
+  it("should successfully read data", async () => {
+    await reader.createReader(getBytesCallback, testFileData.byteLength);
+
+    const dimReadRange: Array<{ start: bigint; end: bigint }> = [
+      { start: BigInt(0), end: BigInt(10) },
+      { start: BigInt(0), end: BigInt(10) },
+      { start: BigInt(0), end: BigInt(10) },
+    ];
+
+    const output = reader.read(OmDataType.DATA_TYPE_FLOAT_ARRAY, dimReadRange);
+    expect(output).toBeInstanceOf(Float32Array);
+    // expect(() => reader.read(OmDataType.DATA_TYPE_FLOAT_ARRAY, dimReadRange)).not.toThrow();
+
+    expect(Array.from(output.slice(0, 10))).toEqual(
+      expect.arrayContaining([
+        expect.closeTo(-24.25, 0.001),
+        expect.closeTo(-24.75, 0.001),
+        expect.closeTo(-23.85, 0.001),
+        expect.closeTo(-23.95, 0.001),
+        expect.closeTo(-25.45, 0.001),
+        expect.closeTo(-25.9, 0.001),
+        expect.closeTo(-26.4, 0.001),
+        expect.closeTo(-26.45, 0.001),
+        expect.closeTo(-26.2, 0.001),
+        expect.closeTo(-26.2, 0.001),
+      ])
+    );
+  });
+
+  it("should successfully readInto data", async () => {
     await reader.createReader(getBytesCallback, testFileData.byteLength);
 
     // Adjust these values according to your test file's dimensions
@@ -69,7 +98,7 @@ describe("OmFileReader", () => {
     const intoCubeDimension = new BigInt64Array([10n, 10n, 10n]);
 
     expect(() =>
-      reader.decode(
+      reader.readInto(
         output,
         OmDataType.DATA_TYPE_FLOAT_ARRAY,
         dimReadStart,
@@ -105,7 +134,7 @@ describe("OmFileReader", () => {
     const intoCubeDimension = new BigInt64Array([10n]);
 
     expect(() =>
-      reader.decode(
+      reader.readInto(
         output,
         OmDataType.DATA_TYPE_FLOAT_ARRAY,
         dimReadStart,
@@ -128,7 +157,7 @@ describe("OmFileReader", () => {
     const intoCubeDimension = new BigInt64Array([1000n, 1000n, 1000n]);
 
     expect(() =>
-      reader.decode(
+      reader.readInto(
         output,
         OmDataType.DATA_TYPE_FLOAT_ARRAY,
         dimReadStart,
@@ -151,7 +180,7 @@ describe("OmFileReader", () => {
     const intoCubeDimension = new BigInt64Array([10n, 10n, 10n]);
 
     expect(() =>
-      reader.decode(
+      reader.readInto(
         output,
         OmDataType.DATA_TYPE_FLOAT_ARRAY,
         dimReadStart,
